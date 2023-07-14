@@ -21,6 +21,12 @@ export class CinemaSeat {
   cinemaId: string;
 
   @Column({
+    nullable: false,
+    default: 0,
+  })
+  seatNumber: number;
+
+  @Column({
     type: 'boolean',
     default: false
   })

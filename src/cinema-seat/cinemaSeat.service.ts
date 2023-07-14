@@ -17,9 +17,13 @@ export class CinemaSeatService {
     This function will create cinema seats based on the seats number passed for that cinema
   */
   async createCinemaSeat(id: string, noOfSeats: number) {
-    const companySeats = Array(noOfSeats).fill({
-      cinemaId: id
-    })
+    const companySeats = [];
+    for (let i = 1; i <= noOfSeats; i++) {
+      companySeats.push({
+        cinemaId: id,
+        seatNumber: i
+      })
+    }
 
     await this.dataSource
       .createQueryBuilder()
@@ -35,7 +39,8 @@ export class CinemaSeatService {
   async purchaseCinemaSeat(purchaseCinemaSeatParams: PurchaseCinemaSeatDto) {
     const purchasedSeat = await this.cinemaSeatRepository.findOne({
       where: {
-        id: purchaseCinemaSeatParams.id,
+        cinemaId: purchaseCinemaSeatParams.cinemaId,
+        seatNumber: purchaseCinemaSeatParams.seatNumber,
       }
     })
 
@@ -55,6 +60,6 @@ export class CinemaSeatService {
     purchasedSeat.isBooked = true
     purchasedSeat.userId = purchaseCinemaSeatParams.userId
     await this.cinemaSeatRepository.save(purchasedSeat)
-    return purchaseCinemaSeatParams.id
+    return purchaseCinemaSeatParams.seatNumber
   }
 }

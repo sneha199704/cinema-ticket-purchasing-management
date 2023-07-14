@@ -2,7 +2,10 @@ import { IsNotEmpty } from 'class-validator';
 
 export class PurchaseCinemaSeatDto {
   @IsNotEmpty()
-  id: string;
+  seatNumber: number;
+
+  @IsNotEmpty()
+  cinemaId: string;
 
   @IsNotEmpty()
   userId: string;

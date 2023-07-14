@@ -11,7 +11,7 @@ export class CinemaSeatController {
 
   /**
    * Purchase cinema seat
-   * @param {string} Seat ID
+   * @param {string} Seat Number
    * @param {string} Cinema ID
    * @param {string} User ID
    * @returns {string} purchased seat ID
