@@ -68,30 +68,40 @@ export class CinemaSeatService {
     This function will purchase two consecutive seats if available
   */
     async purchaseTwoConsecutiveCinemaSeats(purchaseCinemaSeatsParams: PurchaseCinemaSeatsDto) {
-      const nonPurchasedSeats = await this.cinemaSeatRepository.find({
-        where: {
+      let nonPurchasedSeats = await this.dataSource
+        .createQueryBuilder()
+        .select('*')
+        .addSelect("LEAD(cinemaSeat.seatNumber) OVER (ORDER BY cinemaSeat.seatNumber) - cinemaSeat.seatNumber", "diffSeatNumber")
+        .from(CinemaSeat, "cinemaSeat")
+        .andWhere("cinemaSeat.cinemaId = :cinemaId", {
           cinemaId: purchaseCinemaSeatsParams.cinemaId,
+        })
+        .andWhere("cinemaSeat.isBooked = :isBooked", {
           isBooked: false
-        },
-        order: {
-          seatNumber: "ASC"
-        },
-        take: 2
-      })
-  
-      if (nonPurchasedSeats.length !== 2 || ((nonPurchasedSeats[1]?.seatNumber - nonPurchasedSeats[0]?.seatNumber) > 1)) {
+        })
+        .orderBy("cinemaSeat.seatNumber", "ASC")
+        .getRawMany()
+
+        const firstTwoNonPurchasedSeats = []
+        nonPurchasedSeats.map((seat) => {
+          if (firstTwoNonPurchasedSeats.length < 2 && (seat.diffSeatNumber === 1 || seat.diffSeatNumber === null)) {
+            firstTwoNonPurchasedSeats.push(seat)
+          }
+        })
+
+      if (firstTwoNonPurchasedSeats.length !== 2 || ((firstTwoNonPurchasedSeats[1]?.seatNumber - firstTwoNonPurchasedSeats[0]?.seatNumber) > 1)) {
         throw new HttpException(
           messageConstants.CINEMA_SEAT_IS_BOOKED,
           HttpStatus.UNPROCESSABLE_ENTITY,
         );
       }
 
-      const seatNumbers = nonPurchasedSeats.map(seat => seat.seatNumber)
-      nonPurchasedSeats[0].isBooked = true
-      nonPurchasedSeats[0].userId = purchaseCinemaSeatsParams.userId
-      nonPurchasedSeats[1].isBooked = true
-      nonPurchasedSeats[1].userId = purchaseCinemaSeatsParams.userId
-      await this.cinemaSeatRepository.save(nonPurchasedSeats)
+      const seatNumbers = firstTwoNonPurchasedSeats.map(seat => seat.seatNumber)
+      firstTwoNonPurchasedSeats[0].isBooked = true
+      firstTwoNonPurchasedSeats[0].userId = purchaseCinemaSeatsParams.userId
+      firstTwoNonPurchasedSeats[1].isBooked = true
+      firstTwoNonPurchasedSeats[1].userId = purchaseCinemaSeatsParams.userId
+      await this.cinemaSeatRepository.save(firstTwoNonPurchasedSeats)
       return seatNumbers
     }
 }
