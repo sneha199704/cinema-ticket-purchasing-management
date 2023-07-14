@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import entities from './typeorm';
+import { CinemaModule } from './cinema/cinema.module';
+import { CinemaSeatModule } from './cinema-seat/cinemaSeat.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import entities from './typeorm';
       }),
       inject: [ConfigService],
     }),
+    CinemaModule,
+    CinemaSeatModule
   ],
   controllers: [AppController],
   providers: [AppService],

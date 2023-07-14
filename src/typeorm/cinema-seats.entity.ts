@@ -21,7 +21,14 @@ export class CinemaSeat {
   cinemaId: string;
 
   @Column({
+    type: 'boolean',
+    default: false
+  })
+  isBooked: boolean;
+
+  @Column({
     type: 'uuid',
+    nullable: true
   })
   userId: string;
 
