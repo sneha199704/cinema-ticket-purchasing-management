@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 import { CinemaSeatService } from './cinemaSeat.service';
 import { PurchaseCinemaSeatDto } from './dto/purchase-cinema-seat.dto';
+import { PurchaseCinemaSeatsDto } from './dto/purchase-cinema-seats.dto';
 
 @Controller('cinemaSeat')
 export class CinemaSeatController {
@@ -21,6 +22,25 @@ export class CinemaSeatController {
   purchaseSeat(@Body() purchaseCinemaSeatDto: PurchaseCinemaSeatDto) {
     try {
       return this.cinemaSeatService.purchaseCinemaSeat(purchaseCinemaSeatDto);
+    } catch (error: any) {
+      throw new HttpException(
+        error?.message || 'Something went wrong',
+        error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  /**
+   * Purchase two consecutive cinema seats
+   * @param {string} Cinema ID
+   * @param {string} User ID
+   * @returns {string[]} purchased seat numbers
+  */
+  @Post('purchase/two')
+  @UsePipes(ValidationPipe)
+  purchaseTwoConsecutiveSeats(@Body() purchaseCinemaSeatsDto: PurchaseCinemaSeatsDto) {
+    try {
+      return this.cinemaSeatService.purchaseTwoConsecutiveCinemaSeats(purchaseCinemaSeatsDto);
     } catch (error: any) {
       throw new HttpException(
         error?.message || 'Something went wrong',

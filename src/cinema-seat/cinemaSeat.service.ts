@@ -1,9 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CinemaSeat } from 'src/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, In } from 'typeorm';
 import { PurchaseCinemaSeatDto } from './dto/purchase-cinema-seat.dto';
 import { messageConstants } from 'src/constants/messageConstant';
+import { PurchaseCinemaSeatsDto } from './dto/purchase-cinema-seats.dto';
 
 @Injectable()
 export class CinemaSeatService {
@@ -62,4 +63,35 @@ export class CinemaSeatService {
     await this.cinemaSeatRepository.save(purchasedSeat)
     return purchaseCinemaSeatParams.seatNumber
   }
+
+  /*
+    This function will purchase two consecutive seats if available
+  */
+    async purchaseTwoConsecutiveCinemaSeats(purchaseCinemaSeatsParams: PurchaseCinemaSeatsDto) {
+      const nonPurchasedSeats = await this.cinemaSeatRepository.find({
+        where: {
+          cinemaId: purchaseCinemaSeatsParams.cinemaId,
+          isBooked: false
+        },
+        order: {
+          seatNumber: "ASC"
+        },
+        take: 2
+      })
+  
+      if (nonPurchasedSeats.length !== 2 || ((nonPurchasedSeats[1]?.seatNumber - nonPurchasedSeats[0]?.seatNumber) > 1)) {
+        throw new HttpException(
+          messageConstants.CINEMA_SEAT_IS_BOOKED,
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
+
+      const seatNumbers = nonPurchasedSeats.map(seat => seat.seatNumber)
+      nonPurchasedSeats[0].isBooked = true
+      nonPurchasedSeats[0].userId = purchaseCinemaSeatsParams.userId
+      nonPurchasedSeats[1].isBooked = true
+      nonPurchasedSeats[1].userId = purchaseCinemaSeatsParams.userId
+      await this.cinemaSeatRepository.save(nonPurchasedSeats)
+      return seatNumbers
+    }
 }
